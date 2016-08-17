@@ -1,8 +1,9 @@
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/ace/1.1.01/ace.js" type="text/javascript" charset="utf-8"></script>
 <script src="static/viz.js"></script>
 <style>
-textarea {width:30%; height:100%;}
+textarea {width:30%; height:75%;}
 #graph_div {
     display: inline-block;
     vertical-align: top;
@@ -11,17 +12,20 @@ textarea {width:30%; height:100%;}
 
 <script>
 angular.module('myApp',[])
-.config(function($interpolateProvider) {
-  $interpolateProvider.startSymbol('{[{').endSymbol('}]}');
-})
 .controller('MyController', function($scope, $http) {
     $scope.text = '';
     console.log('getting latest...');
     $http.get('/get_latest').then(function(response) {
-        $scope.text = response.data;
-        $scope.render_graph();
+      $scope.text = response.data;
+      $scope.render_graph();
     });
-    $scope.results = [];
+
+    $scope.version_timestamps = [];
+    $http.get('/get_version_timestamps').then(function(response) {
+      $scope.version_timestamps = response.data;
+      console.log('version_timestamps:', $scope.version_timestamps);
+      console.log('  type:', $scope.version_timestamps[0]);
+    })
 
     var post_timeout = null;
     $scope.post_text = function() {
@@ -34,7 +38,7 @@ angular.module('myApp',[])
           }, function(response) {
             console.log('error:', response);
           });
-      }, 1000);
+      }, 500);
     };
 
     $scope.render_graph = function() {
@@ -59,4 +63,10 @@ angular.module('myApp',[])
         {{text}}
     </textarea>
     <div id='graph_div'><img></div>
+    <div id='versions'>
+      <div>Revert to previous version:</div>
+      <ul ng-repeat="timestamp in version_timestamps">
+        <a href='revert_to/{{timestamp}}'>{{timestamp}}</a>
+      </ul>
+    </div>
 </div>

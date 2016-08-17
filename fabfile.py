@@ -15,8 +15,8 @@ env.use_ssh_config = True
 @api.task
 def deploy_server():
     api.local(
-        'rsync --exclude=".git" --exclude="junk" --exclude="node_modules" '
-        '--exclude="*.log" --exclude="secrets.py" -v -r {0} {1}@{2}:~'.format(
+        'rsync --exclude=".git" --exclude="junk" --exclude="versions" '
+        '--exclude="*.log" -v -r {0} {1}@{2}:~'.format(
             proj_path, env.user, env.hosts[0]))
 
     print '--- now do: ---'
