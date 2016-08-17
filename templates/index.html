@@ -1,0 +1,62 @@
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js'></script>
+<script src="static/viz.js"></script>
+<style>
+textarea {width:30%; height:100%;}
+#graph_div {
+    display: inline-block;
+    vertical-align: top;
+}
+</style>
+
+<script>
+angular.module('myApp',[])
+.config(function($interpolateProvider) {
+  $interpolateProvider.startSymbol('{[{').endSymbol('}]}');
+})
+.controller('MyController', function($scope, $http) {
+    $scope.text = '';
+    console.log('getting latest...');
+    $http.get('/get_latest').then(function(response) {
+        $scope.text = response.data;
+        $scope.render_graph();
+    });
+    $scope.results = [];
+
+    var post_timeout = null;
+    $scope.post_text = function() {
+      clearTimeout(post_timeout);
+      post_timeout = setTimeout(function() {
+        $http.post('/update_text', {text: $scope.text}).
+          then(function(response) {
+            $scope.render_graph();
+            console.log('response:', response.data);
+          }, function(response) {
+            console.log('error:', response);
+          });
+      }, 1000);
+    };
+
+    $scope.render_graph = function() {
+      var graph_div = document.querySelector("#graph_div");
+      var new_img = Viz($scope.text, { format: "png-image-element" });
+      var old_img = graph_div.querySelector("img");
+      graph_div.removeChild(old_img);
+      graph_div.appendChild(new_img);
+      setTimeout(function() {
+          $('img').width($('img').width() * .75);
+          $('img').height($('img').height() * .75);
+      }, 0);
+    };
+});
+
+
+
+</script>
+
+<div ng-controller="MyController" ng-app="myApp">
+    <textarea wrap='off' ng-model='text' ng-change="post_text()">
+        {{text}}
+    </textarea>
+    <div id='graph_div'><img></div>
+</div>
